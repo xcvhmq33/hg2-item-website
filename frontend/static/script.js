@@ -1,3 +1,4 @@
+const API_BASE = "http://127.0.0.1:8000/api/v1/items";
 let currentPage = 0;
 const itemsPerPage = 96;
 
@@ -7,7 +8,7 @@ function changePage(direction) {
 }
 
 async function loadItems(page) {
-    const response = await fetch(`http://127.0.0.1:8000/api/v1/items?skip=${page * itemsPerPage}&limit=${itemsPerPage}`);
+    const response = await fetch(`${API_BASE}/?skip=${page * itemsPerPage}&limit=${itemsPerPage}`);
     const items = await response.json();
     renderItems(items);
 }
@@ -15,23 +16,34 @@ async function loadItems(page) {
 function renderItems(items) {
     const container = document.getElementById('items-container');
     container.innerHTML = '';
-
+    
     if (items.length === 0) {
         container.innerHTML = '<p>No items found.</p>';
         return;
     }
-
+    
     items.forEach(item => {
         const itemDiv = document.createElement('div');
         itemDiv.classList.add('item');
         itemDiv.innerHTML = `
-            <img src="${item.image_url}" alt="${item.title}" style="width: 100%; height: auto;">
-            <h3>${item.title}</h3>
+        <img src="${item.image_url}" alt="${item.title}" style="width: 100%; height: auto;">
+        <h3>${item.title}</h3>
         `;
+        itemDiv.addEventListener('click', () => showItemDetails(item.ingame_id));
         container.appendChild(itemDiv);
     });
-
+    
     updatePagination();
+}
+
+async function showItemDetails(itemId) {
+    const response = await fetch(`${API_BASE}/${itemId}`);
+    const item = await response.json();
+    alert(`
+        Title: ${item.title}
+        Rarity: ${item.rarity}
+        Damage Type: ${item.damage_type || 'None'}
+    `);
 }
 
 function updatePagination() {
