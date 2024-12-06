@@ -7,6 +7,16 @@ function changePage(direction) {
     loadItems(currentPage);
 }
 
+function jumpToPage(event) {
+    const pageNumber = parseInt(event.target.value, 10);
+    if (!isNaN(pageNumber) && pageNumber > 0) {
+        currentPage = pageNumber - 1;
+        loadItems(currentPage);
+    } else {
+        event.target.value = currentPage + 1;
+    }
+}
+
 async function loadItems(page) {
     const response = await fetch(`${API_BASE}/?skip=${page * itemsPerPage}&limit=${itemsPerPage}`);
     const items = await response.json();
