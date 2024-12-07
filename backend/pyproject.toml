@@ -14,8 +14,14 @@ dependencies = [
 
 [tool.uv]
 dev-dependencies = [
+    "coverage<8.0.0,>=7.6.9",
+    "httpx<0.29.0,>=0.28.0",
     "mypy>=1.12.0,<2.0.0",
     "pre-commit>=4.0.1,<5.0.0",
+    # Latest versions have event loop issues
+    "pytest-asyncio==0.21.2",
+    # Pin for compatibility with pytest-asyncio
+    "pytest==8.3.4",
     "ruff>=0.6.9,<1.0.0",
     "types-passlib>=1.7.7.20240819,<2.0.0",
 ]

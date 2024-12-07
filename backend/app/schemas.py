@@ -1,5 +1,5 @@
 from hg2_item_parser.enums import DamageType, WeaponType
-from pydantic import BaseModel, Field, HttpUrl, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 
 class PropertiesBaseSchema(BaseModel):
