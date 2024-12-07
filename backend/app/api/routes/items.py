@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Path
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
@@ -25,11 +25,12 @@ async def read_items(session: SessionDep, skip: int = 0, limit: int = 100) -> An
     )
     result = await session.execute(query)
     items = result.scalars().unique().all()
+
     return items
 
 
 @router.get("/{item_id}", response_model=ItemReadSchema)
-async def read_item(session: SessionDep, item_id: int) -> Any:
+async def read_item(session: SessionDep, item_id: int = Path(ge=1)) -> Any:
     query = (
         select(Item)
         .where(Item.ingame_id == item_id)
@@ -40,4 +41,7 @@ async def read_item(session: SessionDep, item_id: int) -> Any:
     )
     result = await session.execute(query)
     item = result.scalars().unique().first()
+    if item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+
     return item
