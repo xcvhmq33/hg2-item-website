@@ -1,5 +1,5 @@
 from hg2_item_parser.enums import DamageType, WeaponType
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, ConfigDict
 
 
 class PropertiesBaseSchema(BaseModel):
@@ -40,26 +40,20 @@ class ItemBaseSchema(BaseModel):
 
 
 class PropertiesReadSchema(PropertiesBaseSchema):
+    model_config = ConfigDict(from_attributes=True)
     id: int
-
-    class Config:
-        orm_mode = True
 
 
 class SkillReadSchema(SkillBaseSchema):
+    model_config = ConfigDict(from_attributes=True)
     id: int
-
-    class Config:
-        orm_mode = True
 
 
 class ItemReadSchema(ItemBaseSchema):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     properties: PropertiesReadSchema | None
     skills: list[SkillReadSchema]
-
-    class Config:
-        orm_mode = True
 
 
 class PropertiesCreateSchema(PropertiesBaseSchema): ...
