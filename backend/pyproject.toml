@@ -6,8 +6,10 @@ readme = "README.md"
 requires-python = ">=3.12,<4.0"
 dependencies = [
     "asyncpg<0.31.0,>=0.30.0",
+    "authx<2.0.0,>=1.4.0",
     "fastapi[standard]>=0.115.6,<0.116",
     "hg2-item-parser>=0.7.1",
+    "passlib<2.0.0,>=1.7.4",
     "pydantic-settings<3.0.0,>=2.6.1",
     "sqlalchemy<3.0.0,>=2.0.36",
 ]

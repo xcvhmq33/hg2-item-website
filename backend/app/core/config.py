@@ -1,9 +1,11 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic_core import MultiHostUrl
 from pydantic import PostgresDsn, computed_field
+from pydantic_core import MultiHostUrl
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    SECRET_KEY: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     FRONTEND_HOST: str = "http://localhost:5173"
     PROJECT_NAME: str = "Full Stack FastAPI Project"
     API_V1_STR: str = "/api/v1"
@@ -22,7 +24,7 @@ class Settings(BaseSettings):
             password=self.DB_PASS,
             host=self.DB_HOST,
             port=self.DB_PORT,
-            path=self.DB_NAME
+            path=self.DB_NAME,
         )
 
     model_config = SettingsConfigDict(env_file="../.env")

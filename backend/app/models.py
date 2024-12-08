@@ -1,3 +1,6 @@
+import uuid
+from dataclasses import dataclass
+
 from hg2_item_parser.enums import DamageType, WeaponType
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.ext.asyncio import AsyncAttrs
@@ -12,6 +15,7 @@ from sqlalchemy.orm import (
 class Base(DeclarativeBase, AsyncAttrs): ...
 
 
+@dataclass
 class Item(Base):
     __tablename__ = "item"
 
@@ -32,6 +36,7 @@ class Item(Base):
     )
 
 
+@dataclass
 class Properties(Base):
     __tablename__ = "properties"
 
@@ -53,8 +58,10 @@ class Properties(Base):
     item: Mapped["Item"] = relationship("Item", back_populates="properties")
 
 
+@dataclass
 class Skill(Base):
     __tablename__ = "skill"
+
     id: Mapped[int] = mapped_column(primary_key=True)
     ingame_id: Mapped[int]
     title_id: Mapped[int]
@@ -66,3 +73,15 @@ class Skill(Base):
     item_id: Mapped[int] = mapped_column(ForeignKey("item.ingame_id"))
 
     item: Mapped["Item"] = relationship("Item", back_populates="skills")
+
+
+@dataclass
+class User(Base):
+    __tablename__ = "user"
+
+    id: Mapped[uuid.UUID] = mapped_column(default=uuid.uuid4, primary_key=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    is_active: Mapped[bool] = True
+    is_superuser: Mapped[bool] = False
+    name: Mapped[str] = mapped_column(String(32), unique=True)
+    hashed_password: Mapped[str]
