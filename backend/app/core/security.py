@@ -1,20 +1,21 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
-from authx import AuthX, AuthXConfig
+import jwt
 from passlib.context import CryptContext
 
 from app.core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-authx_config = AuthXConfig(
-    JWT_ACCESS_TOKEN_EXPIRES=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
-    JWT_ALGORITHM="HS256",
-    JWT_SECRET_KEY="SECRET_KEY",
-    JWT_TOKEN_LOCATION=["headers"],
-)
+ALGORITHM = "HS256"
 
-auth = AuthX(authx_config)
+
+def create_access_token(subject: str | Any, expires_delta: timedelta) -> str:
+    expire = datetime.now(UTC) + expires_delta
+    to_encode = {"exp": expire, "sub": str(subject)}
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:

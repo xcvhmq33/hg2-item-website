@@ -70,6 +70,11 @@ class UserReadSchema(UserBaseSchema):
     id: uuid.UUID
 
 
+class UsersReadSchema(BaseModel):
+    data: list[UserReadSchema]
+    count: int
+
+
 class PropertiesCreateSchema(PropertiesBaseSchema): ...
 
 
@@ -85,7 +90,7 @@ class UserCreateSchema(UserBaseSchema):
 
 class UserLoginSchema(BaseModel):
     name: str = Field(max_length=32)
-    password: str
+    password: str = Field(min_length=8, max_length=40)
 
 
 class UserRegisterSchema(UserLoginSchema):
@@ -95,3 +100,7 @@ class UserRegisterSchema(UserLoginSchema):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class TokenPayload(BaseModel):
+    sub: str | None = None

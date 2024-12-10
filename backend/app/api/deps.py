@@ -1,21 +1,25 @@
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
+import jwt
 from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer
-from app.core.config import settings
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.security import auth
-from app.models import User
 from fastapi.exceptions import HTTPException
-from app.core.db import engine
+from fastapi.security import OAuth2PasswordBearer
+from jwt.exceptions import InvalidTokenError
+from pydantic import ValidationError
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
+from app.core.db import engine
+from app.models import User
+from app.schemas import TokenPayload
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
 )
 
 TokenDep = Annotated[str, Depends(reusable_oauth2)]
+
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSession(engine) as session:
@@ -24,8 +28,16 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 SessionDep = Annotated[AsyncSession, Depends(get_db)]
 
+
 async def get_current_user(session: SessionDep, token: TokenDep) -> User:
-    payload = auth.verify_token(token)
+    try:
+        decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        payload = TokenPayload(**decoded)
+    except (InvalidTokenError, ValidationError):
+        raise HTTPException(
+            status_code=403,
+            detail="Could not validate credentials",
+        )
     user = await session.get(User, payload.sub)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -35,6 +47,7 @@ async def get_current_user(session: SessionDep, token: TokenDep) -> User:
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
 
 async def get_current_active_superuser(current_user: CurrentUser) -> User:
     if not current_user.is_superuser:

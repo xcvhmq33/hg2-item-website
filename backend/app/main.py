@@ -3,7 +3,6 @@ from fastapi.routing import APIRoute
 
 from app.api.main import api_router
 from app.core.config import settings
-from app.core.security import auth
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:
@@ -17,4 +16,3 @@ app = FastAPI(
 )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
-auth.handle_errors(app)
