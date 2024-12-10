@@ -81,7 +81,7 @@ class User(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(default=uuid.uuid4, primary_key=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    is_active: Mapped[bool] = True
-    is_superuser: Mapped[bool] = False
+    is_active: Mapped[bool] = mapped_column(default=True)
+    is_superuser: Mapped[bool] = mapped_column(default=False)
     name: Mapped[str] = mapped_column(String(32), unique=True)
     hashed_password: Mapped[str]
