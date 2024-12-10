@@ -90,3 +90,8 @@ class UserLoginSchema(BaseModel):
 
 class UserRegisterSchema(UserLoginSchema):
     email: EmailStr = Field(max_length=255)
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
