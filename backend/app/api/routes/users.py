@@ -1,26 +1,30 @@
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Path
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from app import crud
-from app.api.deps import SessionDep
+from app.api.deps import SessionDep, get_current_active_superuser, CurrentUser
+from fastapi import Depends
 from app.models import User
-from app.schemas import UserCreateSchema, UserReadSchema, UserRegisterSchema
+from app.schemas import UserCreateSchema, UserReadSchema, UserRegisterSchema, UsersReadSchema
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/", response_model=list[UserReadSchema])
+@router.get("/", dependencies=[Depends(get_current_active_superuser)], response_model=UsersReadSchema)
 async def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
-    query = select(User).offset(skip).limit(limit).order_by(User.name)
-    result = await session.execute(query)
-    users = result.scalars().all()
+    count_query = select(func.count()).select_from(User)
+    count_result = await session.execute(count_query)
+    count = count_result.scalars().one()
+    users_query = select(User).offset(skip).limit(limit).order_by(User.name)
+    users_result = await session.execute(users_query)
+    users = users_result.scalars().all()
 
-    return users
+    return UsersReadSchema(data=users, count=count)
 
 
-@router.get("/{username}", response_model=UserReadSchema)
+@router.get("/{username}", dependencies=[Depends(get_current_active_superuser)], response_model=UserReadSchema)
 async def read_user(session: SessionDep, username: str = Path(max_length=32)) -> Any:
     user = await crud.get_user_by_name(session, username)
     if user is None:
@@ -29,7 +33,7 @@ async def read_user(session: SessionDep, username: str = Path(max_length=32)) ->
     return user
 
 
-@router.post("/", response_model=UserReadSchema)
+@router.post("/", dependencies=[Depends(get_current_active_superuser)], response_model=UserReadSchema)
 async def create_user(session: SessionDep, user_in: UserCreateSchema) -> Any:
     existing_user = await crud.get_user_by_name(session, user_in.name)
     if existing_user is not None:
