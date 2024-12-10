@@ -88,6 +88,12 @@ class UserCreateSchema(UserBaseSchema):
     password: str = Field(min_length=8, max_length=40)
 
 
+class UserUpdateSchema(UserBaseSchema):
+    email: EmailStr | None = Field(default=None, max_length=255)
+    name: str | None = Field(default=None, max_length=32)
+    password: str | None = Field(default=None, min_length=8, max_length=40)
+
+
 class UserLoginSchema(BaseModel):
     name: str = Field(max_length=32)
     password: str = Field(min_length=8, max_length=40)
