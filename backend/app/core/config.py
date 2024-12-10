@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     DB_USER: str
     DB_PASS: str
     DB_NAME: str
+    FIRST_SUPERUSER_EMAIL: str
+    FIRST_SUPERUSER_NAME: str
+    FIRST_SUPERUSER_PASS: str
 
     @computed_field
     @property
