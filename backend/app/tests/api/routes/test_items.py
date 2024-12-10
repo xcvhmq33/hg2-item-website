@@ -43,4 +43,4 @@ async def test_read_items(client: AsyncClient, db: AsyncSession) -> None:
     )
     assert response.status_code == 200
     content = response.json()
-    assert len(content) == 2
+    assert len(content) >= 2

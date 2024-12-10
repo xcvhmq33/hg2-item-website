@@ -117,5 +117,7 @@ async def update_user(
             raise HTTPException(
                 status_code=409, detail="User with this name already exists"
             )
-    updated_user = await crud.update_user(session=session, db_user=db_user, user_in=user_in)
+    updated_user = await crud.update_user(
+        session=session, db_user=db_user, user_in=user_in
+    )
     return updated_user
