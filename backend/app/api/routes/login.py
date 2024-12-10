@@ -1,22 +1,22 @@
-from typing import Any
+from typing import Any, Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 
 from app import crud
 from app.api.deps import SessionDep
-from app.core.security import auth, verify_password
-from app.schemas import UserLoginSchema
+from app.core.security import auth
 
 router = APIRouter(tags=["login"])
 
 
-@router.post("login/")
-async def login(session: SessionDep, user_in: UserLoginSchema) -> Any:
-    user = await crud.get_user_by_name(session, user_in.name)
+@router.post("/login")
+async def login(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Any:
+    user = await crud.authenticate(session, form_data.username, form_data.password)
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    if not verify_password(user_in.password, user.hashed_password):
-        raise HTTPException(status_code=403, detail="Incorrect password")
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
     token = auth.create_access_token(uid=str(user.id))
 
     return {"access_token": token}

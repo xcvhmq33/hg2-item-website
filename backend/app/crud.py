@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, verify_password
 from app.models import Item, User
 from app.schemas import ItemCreateSchema, UserCreateSchema
 
@@ -55,3 +55,11 @@ async def get_user_by_uuid(session: AsyncSession, uuid: uuid.UUID):
     result = await session.execute(query)
     user = result.scalars().first()
     return user
+
+async def authenticate(session: AsyncSession, name: str, password: str) -> User | None:
+    db_user = await get_user_by_name(session, name)
+    if db_user is None:
+        return None
+    if not verify_password(password, db_user.hashed_password):
+        return None
+    return db_user
