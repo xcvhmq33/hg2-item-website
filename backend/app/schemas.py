@@ -65,6 +65,11 @@ class ItemReadSchema(ItemBaseSchema):
     skills: list[SkillReadSchema]
 
 
+class ItemsReadSchema(BaseModel):
+    data: list[ItemReadSchema]
+    count: int
+
+
 class UserReadSchema(UserBaseSchema):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID

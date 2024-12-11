@@ -1,19 +1,22 @@
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Path
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
 from app.api.deps import SessionDep
 from app.models import Item
-from app.schemas import ItemReadSchema
+from app.schemas import ItemReadSchema, ItemsReadSchema
 
 router = APIRouter(prefix="/items", tags=["items"])
 
 
-@router.get("/", response_model=list[ItemReadSchema])
+@router.get("/", response_model=ItemsReadSchema)
 async def read_items(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
-    query = (
+    count_query = select(func.count()).select_from(Item)
+    count_result = await session.execute(count_query)
+    count = count_result.scalars().first()
+    items_query = (
         select(Item)
         .offset(skip)
         .limit(limit)
@@ -23,10 +26,10 @@ async def read_items(session: SessionDep, skip: int = 0, limit: int = 100) -> An
         )
         .order_by(Item.ingame_id)
     )
-    result = await session.execute(query)
-    items = result.scalars().unique().all()
+    items_result = await session.execute(items_query)
+    items = items_result.scalars().unique().all()
 
-    return items
+    return ItemsReadSchema(data=items, count=count)
 
 
 @router.get("/{item_id}", response_model=ItemReadSchema)
