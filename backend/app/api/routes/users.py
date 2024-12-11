@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy import func, select
 
 from app import crud
-from app.api.deps import SessionDep, get_current_active_superuser
+from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.models import User
 from app.schemas import (
     UserCreateSchema,
@@ -35,10 +35,18 @@ async def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> An
 
 @router.get(
     "/{username}",
-    dependencies=[Depends(get_current_active_superuser)],
     response_model=UserReadSchema,
 )
-async def read_user(session: SessionDep, username: str = Path(max_length=32)) -> Any:
+async def read_user(
+    session: SessionDep, current_user: CurrentUser, username: str = Path(max_length=32)
+) -> Any:
+    if username == current_user.name:
+        return current_user
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=403,
+            detail="The user doesn't have enough privileges",
+        )
     user = await crud.get_user_by_name(session, username)
     if user is None:
         raise HTTPException(

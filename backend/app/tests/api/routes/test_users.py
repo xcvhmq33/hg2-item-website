@@ -29,6 +29,35 @@ async def test_read_user(
 
 
 @pytest.mark.asyncio
+async def test_read_user_current_user(client: AsyncClient, db: AsyncSession) -> None:
+    email = random_email()
+    username = random_lower_string()
+    password = random_lower_string()
+    user_in = UserCreateSchema(email=email, name=username, password=password)
+    await crud.create_user(db, user_in)
+
+    login_data = {
+        "username": username,
+        "password": password,
+    }
+    r = await client.post(f"{settings.API_V1_STR}/login/access-token", data=login_data)
+    tokens = r.json()
+    a_token = tokens["access_token"]
+    headers = {"Authorization": f"Bearer {a_token}"}
+
+    r = await client.get(
+        f"{settings.API_V1_STR}/users/{username}",
+        headers=headers,
+    )
+    assert 200 <= r.status_code < 300
+    api_user = r.json()
+    existing_user = await crud.get_user_by_name(db, username)
+    assert existing_user
+    assert existing_user.email == api_user["email"]
+    assert existing_user.name == api_user["name"]
+
+
+@pytest.mark.asyncio
 async def test_read_user_permissions_error(
     client: AsyncClient, normal_user_token_headers: dict[str, str]
 ) -> None:
