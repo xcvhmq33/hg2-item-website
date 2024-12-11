@@ -409,6 +409,81 @@ async def test_update_user_me_name_exists(
 
 
 @pytest.mark.asyncio
+async def test_update_password_me(
+    client: AsyncClient, superuser_token_headers: dict[str, str], db: AsyncSession
+) -> None:
+    new_password = random_lower_string()
+    data = {
+        "current_password": settings.FIRST_SUPERUSER_PASS,
+        "new_password": new_password,
+    }
+    r = await client.patch(
+        f"{settings.API_V1_STR}/users/me/password",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert r.status_code == 200
+    updated_user = r.json()
+    assert updated_user["message"] == "Password updated successfully"
+
+    user_db = await crud.get_user_by_name(db, settings.FIRST_SUPERUSER_NAME)
+    assert user_db
+    assert user_db.email == settings.FIRST_SUPERUSER_EMAIL
+    assert verify_password(new_password, user_db.hashed_password)
+
+    # Revert to the old password to keep consistency in test
+    old_data = {
+        "current_password": new_password,
+        "new_password": settings.FIRST_SUPERUSER_PASS,
+    }
+    r = await client.patch(
+        f"{settings.API_V1_STR}/users/me/password",
+        headers=superuser_token_headers,
+        json=old_data,
+    )
+    await db.refresh(user_db)
+
+    assert r.status_code == 200
+    assert verify_password(settings.FIRST_SUPERUSER_PASS, user_db.hashed_password)
+
+
+@pytest.mark.asyncio
+async def test_update_password_me_incorrect_password(
+    client: AsyncClient, superuser_token_headers: dict[str, str]
+) -> None:
+    new_password = random_lower_string()
+    data = {"current_password": new_password, "new_password": new_password}
+    r = await client.patch(
+        f"{settings.API_V1_STR}/users/me/password",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert r.status_code == 400
+    updated_user = r.json()
+    assert updated_user["detail"] == "Incorrect password"
+
+
+@pytest.mark.asyncio
+async def test_update_password_me_same_password_error(
+    client: AsyncClient, superuser_token_headers: dict[str, str]
+) -> None:
+    data = {
+        "current_password": settings.FIRST_SUPERUSER_PASS,
+        "new_password": settings.FIRST_SUPERUSER_PASS,
+    }
+    r = await client.patch(
+        f"{settings.API_V1_STR}/users/me/password",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert r.status_code == 400
+    updated_user = r.json()
+    assert (
+        updated_user["detail"] == "New password cannot be the same as the current one"
+    )
+
+
+@pytest.mark.asyncio
 async def test_delete_user_me(client: AsyncClient, db: AsyncSession) -> None:
     email = random_email()
     username = random_lower_string()

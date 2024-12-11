@@ -5,9 +5,11 @@ from sqlalchemy import func, select
 
 from app import crud
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
+from app.core.security import get_password_hash, verify_password
 from app.models import User
 from app.schemas import (
     Message,
+    UpdatePassword,
     UserCreateSchema,
     UserReadSchema,
     UserRegisterSchema,
@@ -63,6 +65,23 @@ async def update_user_me(
         session=session, db_user=current_user, user_in=user_in
     )
     return updated_user
+
+
+@router.patch("/me/password", response_model=Message)
+async def update_password_me(
+    session: SessionDep, body: UpdatePassword, current_user: CurrentUser
+) -> Any:
+    if not verify_password(body.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Incorrect password")
+    if body.current_password == body.new_password:
+        raise HTTPException(
+            status_code=400, detail="New password cannot be the same as the current one"
+        )
+    hashed_password = get_password_hash(body.new_password)
+    current_user.hashed_password = hashed_password
+    session.add(current_user)
+    await session.commit()
+    return Message(message="Password updated successfully")
 
 
 @router.delete("/me")
