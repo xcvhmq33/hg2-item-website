@@ -66,7 +66,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "alembic", specifier = ">=1.14.0" },
+    { name = "alembic", specifier = ">=1.14.0,<2.0.0" },
     { name = "asyncpg", specifier = ">=0.30.0,<0.31.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.115.6,<0.116" },
     { name = "hg2-item-parser", specifier = ">=0.7.1" },

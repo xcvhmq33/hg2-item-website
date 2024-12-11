@@ -1,5 +1,4 @@
 import uuid
-from dataclasses import dataclass
 
 from hg2_item_parser.enums import DamageType, WeaponType
 from sqlalchemy import ForeignKey, String
@@ -7,19 +6,19 @@ from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
+    MappedAsDataclass,
     mapped_column,
     relationship,
 )
 
 
-class Base(DeclarativeBase, AsyncAttrs): ...
+class Base(DeclarativeBase, MappedAsDataclass, AsyncAttrs): ...
 
 
-@dataclass
 class Item(Base):
     __tablename__ = "item"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
     ingame_id: Mapped[int] = mapped_column(unique=True, nullable=False)
     title_id: Mapped[int]
     title: Mapped[str] = mapped_column(String(64))
@@ -29,14 +28,13 @@ class Item(Base):
     rarity: Mapped[int]
 
     properties: Mapped["Properties"] = relationship(
-        "Properties", back_populates="item", cascade="all, delete-orphan"
+        "Properties", back_populates="item", cascade="all, delete-orphan", init=False
     )
     skills: Mapped[list["Skill"]] = relationship(
-        "Skill", back_populates="item", cascade="all, delete-orphan"
+        "Skill", back_populates="item", cascade="all, delete-orphan", init=False
     )
 
 
-@dataclass
 class Properties(Base):
     __tablename__ = "properties"
 
@@ -58,7 +56,6 @@ class Properties(Base):
     item: Mapped["Item"] = relationship("Item", back_populates="properties")
 
 
-@dataclass
 class Skill(Base):
     __tablename__ = "skill"
 
@@ -75,13 +72,14 @@ class Skill(Base):
     item: Mapped["Item"] = relationship("Item", back_populates="skills")
 
 
-@dataclass
 class User(Base):
     __tablename__ = "user"
 
-    id: Mapped[uuid.UUID] = mapped_column(default=uuid.uuid4, primary_key=True)
+    id: Mapped[uuid.UUID] = mapped_column(
+        default_factory=uuid.uuid4, primary_key=True, init=False
+    )
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    is_active: Mapped[bool] = mapped_column(default=True)
-    is_superuser: Mapped[bool] = mapped_column(default=False)
     name: Mapped[str] = mapped_column(String(32), unique=True)
     hashed_password: Mapped[str]
+    is_active: Mapped[bool] = mapped_column(default=True)
+    is_superuser: Mapped[bool] = mapped_column(default=False)
