@@ -51,7 +51,7 @@ class Properties(Base):
     crit_rate: Mapped[float] = mapped_column(nullable=True)
     base_sync: Mapped[int] = mapped_column(nullable=True)
     max_sync: Mapped[int] = mapped_column(nullable=True)
-    item_id: Mapped[int] = mapped_column(ForeignKey("item.ingame_id"))
+    item_ingame_id: Mapped[int] = mapped_column(ForeignKey("item.ingame_id"))
 
     item: Mapped["Item"] = relationship("Item", back_populates="properties")
 
@@ -67,7 +67,7 @@ class Skill(Base):
     description_template: Mapped[str]
     description: Mapped[str]
     damage_type: Mapped[DamageType] = mapped_column(nullable=True)
-    item_id: Mapped[int] = mapped_column(ForeignKey("item.ingame_id"))
+    item_ingame_id: Mapped[int] = mapped_column(ForeignKey("item.ingame_id"))
 
     item: Mapped["Item"] = relationship("Item", back_populates="skills")
 
