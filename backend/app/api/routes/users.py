@@ -41,7 +41,10 @@ async def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> An
 async def read_user(session: SessionDep, username: str = Path(max_length=32)) -> Any:
     user = await crud.get_user_by_name(session, username)
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=404,
+            detail="The user with this name does not exist in the system",
+        )
 
     return user
 
