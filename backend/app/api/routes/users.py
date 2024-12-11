@@ -33,6 +33,11 @@ async def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> An
     return UsersReadSchema(data=users, count=count)
 
 
+@router.get("/me", response_model=UserReadSchema)
+async def read_user_me(current_user: CurrentUser) -> Any:
+    return current_user
+
+
 @router.get(
     "/{username}",
     response_model=UserReadSchema,

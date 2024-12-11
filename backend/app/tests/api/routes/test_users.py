@@ -70,6 +70,35 @@ async def test_read_user_permissions_error(
 
 
 @pytest.mark.asyncio
+async def test_read_superuser_me(
+    client: AsyncClient, superuser_token_headers: dict[str, str]
+) -> None:
+    r = await client.get(
+        f"{settings.API_V1_STR}/users/me", headers=superuser_token_headers
+    )
+    current_user = r.json()
+    assert current_user
+    assert current_user["is_active"] is True
+    assert current_user["is_superuser"] is True
+    assert current_user["email"] == settings.FIRST_SUPERUSER_EMAIL
+    assert current_user["name"] == settings.FIRST_SUPERUSER_NAME
+
+
+@pytest.mark.asyncio
+async def test_read_normal_user_me(
+    client: AsyncClient, normal_user_token_headers: dict[str, str]
+) -> None:
+    r = await client.get(
+        f"{settings.API_V1_STR}/users/me", headers=normal_user_token_headers
+    )
+    current_user = r.json()
+    assert current_user
+    assert current_user["is_active"] is True
+    assert current_user["is_superuser"] is False
+    assert current_user["name"] == settings.TEST_USER_NAME
+
+
+@pytest.mark.asyncio
 async def test_read_users(
     client: AsyncClient, superuser_token_headers: dict[str, str], db: AsyncSession
 ) -> None:
