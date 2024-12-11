@@ -39,8 +39,6 @@ async def authentication_token_from_username(
         user = await crud.create_user(db, user_in_create)
     else:
         user_in_update = UserUpdateSchema(password=password)
-        if not user.id:
-            raise Exception("User id not set")
         user = await crud.update_user(db, user, user_in_update)
 
     return await user_authentication_headers(client, username, password)
