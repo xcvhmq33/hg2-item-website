@@ -39,6 +39,32 @@ async def read_user_me(current_user: CurrentUser) -> Any:
     return current_user
 
 
+@router.patch("/me", response_model=UserReadSchema)
+async def update_user_me(
+    session: SessionDep, user_in: UserUpdateSchema, current_user: CurrentUser
+) -> Any:
+    if user_in.email:
+        existing_user = await crud.get_user_by_email(
+            session=session, email=user_in.email
+        )
+        if existing_user and existing_user.name != current_user.name:
+            raise HTTPException(
+                status_code=409, detail="User with this email already exists"
+            )
+    if user_in.name:
+        existing_user = await crud.get_user_by_name(
+            session=session, username=user_in.name
+        )
+        if existing_user and existing_user.name != current_user.name:
+            raise HTTPException(
+                status_code=409, detail="User with this name already exists"
+            )
+    updated_user = await crud.update_user(
+        session=session, db_user=current_user, user_in=user_in
+    )
+    return updated_user
+
+
 @router.delete("/me")
 async def delete_user_me(
     session: SessionDep,

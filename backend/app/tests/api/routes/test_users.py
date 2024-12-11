@@ -346,6 +346,69 @@ async def test_update_user_email_exists(
 
 
 @pytest.mark.asyncio
+async def test_update_user_me(
+    client: AsyncClient, normal_user_token_headers: dict[str, str], db: AsyncSession
+) -> None:
+    username = "Updated_name"
+    email = random_email()
+    data = {"name": username, "email": email}
+    r = await client.patch(
+        f"{settings.API_V1_STR}/users/me",
+        headers=normal_user_token_headers,
+        json=data,
+    )
+    assert r.status_code == 200
+    updated_user = r.json()
+    assert updated_user["email"] == email
+    assert updated_user["name"] == username
+
+    user_db = await crud.get_user_by_name(db, username)
+    assert user_db
+    assert user_db.email == email
+    assert user_db.name == username
+
+
+@pytest.mark.asyncio
+async def test_update_user_me_email_exists(
+    client: AsyncClient, normal_user_token_headers: dict[str, str], db: AsyncSession
+) -> None:
+    email = random_email()
+    username = random_lower_string()
+    password = random_lower_string()
+    user_in = UserCreateSchema(email=email, name=username, password=password)
+    await crud.create_user(db, user_in)
+
+    data = {"email": email}
+    r = await client.patch(
+        f"{settings.API_V1_STR}/users/me",
+        headers=normal_user_token_headers,
+        json=data,
+    )
+    assert r.status_code == 409
+    assert r.json()["detail"] == "User with this email already exists"
+
+
+@pytest.mark.asyncio
+async def test_update_user_me_name_exists(
+    client: AsyncClient, normal_user_token_headers: dict[str, str], db: AsyncSession
+) -> None:
+    email = random_email()
+    username = random_lower_string()
+    password = random_lower_string()
+    user_in = UserCreateSchema(email=email, name=username, password=password)
+    await crud.create_user(db, user_in)
+
+    data = {"name": username}
+    r = await client.patch(
+        f"{settings.API_V1_STR}/users/me",
+        headers=normal_user_token_headers,
+        json=data,
+    )
+    assert r.status_code == 409
+    assert r.json()["detail"] == "User with this name already exists"
+
+
+@pytest.mark.asyncio
 async def test_delete_user_me(client: AsyncClient, db: AsyncSession) -> None:
     email = random_email()
     username = random_lower_string()
