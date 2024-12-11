@@ -15,7 +15,7 @@ router = APIRouter(prefix="/items", tags=["items"])
 async def read_items(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
     count_query = select(func.count()).select_from(Item)
     count_result = await session.execute(count_query)
-    count = count_result.scalars().first()
+    count = count_result.scalars().one()
     items_query = (
         select(Item)
         .offset(skip)
