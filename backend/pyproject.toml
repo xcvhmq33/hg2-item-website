@@ -32,6 +32,7 @@ dev-dependencies = [
 [tool.mypy]
 strict = true
 ignore_missing_imports = true
+plugins = ["sqlalchemy.ext.mypy.plugin", "pydantic.mypy"]
 exclude = [".venv", "alembic"]
 
 [tool.ruff]
