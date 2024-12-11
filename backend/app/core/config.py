@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_NAME: str
     FIRST_SUPERUSER_PASS: str
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> PostgresDsn:
         return MultiHostUrl.build(
@@ -29,7 +29,7 @@ class Settings(BaseSettings):
             host=self.DB_HOST,
             port=self.DB_PORT,
             path=self.DB_NAME,
-        )
+        )  # type: ignore[return-value]
 
     model_config = SettingsConfigDict(env_file="../.env")
 

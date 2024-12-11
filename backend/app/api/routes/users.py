@@ -82,8 +82,8 @@ async def register_user(session: SessionDep, user_in: UserRegisterSchema) -> Any
         raise HTTPException(
             status_code=409, detail="User with this email already exists"
         )
-    user_in = UserCreateSchema(**user_in.__dict__)
-    user = await crud.create_user(session, user_in)
+    user_create = UserCreateSchema(**user_in.__dict__)
+    user = await crud.create_user(session, user_create)
 
     return user
 

@@ -1,5 +1,6 @@
 import asyncio
-from collections.abc import AsyncGenerator
+from asyncio import AbstractEventLoop
+from collections.abc import AsyncGenerator, Generator
 
 import pytest
 import pytest_asyncio
@@ -16,7 +17,7 @@ from app.tests.utils.utils import get_superuser_token_headers
 
 
 @pytest.fixture(scope="session")
-def event_loop():
+def event_loop() -> Generator[AbstractEventLoop, None, None]:
     policy = asyncio.get_event_loop_policy()
     loop = policy.new_event_loop()
     yield loop
