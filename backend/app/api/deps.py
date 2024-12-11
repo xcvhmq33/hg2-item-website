@@ -9,6 +9,7 @@ from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import security
 from app.core.config import settings
 from app.core.db import engine
 from app.models import User
@@ -31,7 +32,9 @@ SessionDep = Annotated[AsyncSession, Depends(get_db)]
 
 async def get_current_user(session: SessionDep, token: TokenDep) -> User:
     try:
-        decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        decoded = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+        )
         payload = TokenPayload(**decoded)
     except (InvalidTokenError, ValidationError):
         raise HTTPException(
