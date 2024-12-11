@@ -7,6 +7,7 @@ from app import crud
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.models import User
 from app.schemas import (
+    Message,
     UserCreateSchema,
     UserReadSchema,
     UserRegisterSchema,
@@ -137,3 +138,19 @@ async def update_user(
         session=session, db_user=db_user, user_in=user_in
     )
     return updated_user
+
+
+@router.delete("/{username}", dependencies=[Depends(get_current_active_superuser)])
+async def delete_user(
+    session: SessionDep, current_user: CurrentUser, username: str = Path(max_length=32)
+) -> Message:
+    user = await crud.get_user_by_name(session, username)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user == current_user:
+        raise HTTPException(
+            status_code=403, detail="Super users are not allowed to delete themselves"
+        )
+    await session.delete(user)
+    await session.commit()
+    return Message(message="User deleted successfully")

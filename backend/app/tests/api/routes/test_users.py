@@ -343,3 +343,69 @@ async def test_update_user_email_exists(
     )
     assert r.status_code == 409
     assert r.json()["detail"] == "User with this email already exists"
+
+
+@pytest.mark.asyncio
+async def test_delete_user_by_superuser(
+    client: AsyncClient, superuser_token_headers: dict[str, str], db: AsyncSession
+) -> None:
+    email = random_email()
+    username = random_lower_string()
+    password = random_lower_string()
+    user_in = UserCreateSchema(email=email, name=username, password=password)
+    await crud.create_user(db, user_in)
+    r = await client.delete(
+        f"{settings.API_V1_STR}/users/{username}",
+        headers=superuser_token_headers,
+    )
+    assert r.status_code == 200
+    deleted_user = r.json()
+    assert deleted_user["message"] == "User deleted successfully"
+    existing_user = await crud.get_user_by_name(db, username)
+    assert existing_user is None
+
+
+@pytest.mark.asyncio
+async def test_delete_user_not_found(
+    client: AsyncClient,
+    superuser_token_headers: dict[str, str],
+) -> None:
+    r = await client.delete(
+        f"{settings.API_V1_STR}/users/{random_lower_string()}",
+        headers=superuser_token_headers,
+    )
+    assert r.status_code == 404
+    assert r.json()["detail"] == "User not found"
+
+
+@pytest.mark.asyncio
+async def test_delete_user_current_superuser_error(
+    client: AsyncClient, superuser_token_headers: dict[str, str], db: AsyncSession
+) -> None:
+    super_user = await crud.get_user_by_name(db, settings.FIRST_SUPERUSER_NAME)
+    assert super_user
+
+    r = await client.delete(
+        f"{settings.API_V1_STR}/users/{settings.FIRST_SUPERUSER_NAME}",
+        headers=superuser_token_headers,
+    )
+    assert r.status_code == 403
+    assert r.json()["detail"] == "Super users are not allowed to delete themselves"
+
+
+@pytest.mark.asyncio
+async def test_delete_user_without_privileges(
+    client: AsyncClient, normal_user_token_headers: dict[str, str], db: AsyncSession
+) -> None:
+    email = random_email()
+    username = random_lower_string()
+    password = random_lower_string()
+    user_in = UserCreateSchema(email=email, name=username, password=password)
+    await crud.create_user(db, user_in)
+
+    r = await client.delete(
+        f"{settings.API_V1_STR}/users/{username}",
+        headers=normal_user_token_headers,
+    )
+    assert r.status_code == 403
+    assert r.json()["detail"] == "The user doesn't have enough privileges"
