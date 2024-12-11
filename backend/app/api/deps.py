@@ -36,11 +36,11 @@ async def get_current_user(session: SessionDep, token: TokenDep) -> User:
             token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
         )
         payload = TokenPayload(**decoded)
-    except (InvalidTokenError, ValidationError):
+    except (InvalidTokenError, ValidationError) as e:
         raise HTTPException(
             status_code=403,
             detail="Could not validate credentials",
-        )
+        ) from e
     user = await session.get(User, payload.sub)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
