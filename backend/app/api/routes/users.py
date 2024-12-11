@@ -39,6 +39,20 @@ async def read_user_me(current_user: CurrentUser) -> Any:
     return current_user
 
 
+@router.delete("/me")
+async def delete_user_me(
+    session: SessionDep,
+    current_user: CurrentUser,
+) -> Message:
+    if current_user.is_superuser:
+        raise HTTPException(
+            status_code=403, detail="Super users are not allowed to delete themselves"
+        )
+    await session.delete(current_user)
+    await session.commit()
+    return Message(message="User deleted successfully")
+
+
 @router.get(
     "/{username}",
     response_model=UserReadSchema,

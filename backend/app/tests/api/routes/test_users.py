@@ -346,6 +346,47 @@ async def test_update_user_email_exists(
 
 
 @pytest.mark.asyncio
+async def test_delete_user_me(client: AsyncClient, db: AsyncSession) -> None:
+    email = random_email()
+    username = random_lower_string()
+    password = random_lower_string()
+    user_in = UserCreateSchema(email=email, name=username, password=password)
+    await crud.create_user(db, user_in)
+
+    login_data = {
+        "username": username,
+        "password": password,
+    }
+    r = await client.post(f"{settings.API_V1_STR}/login/access-token", data=login_data)
+    tokens = r.json()
+    a_token = tokens["access_token"]
+    headers = {"Authorization": f"Bearer {a_token}"}
+
+    r = await client.delete(
+        f"{settings.API_V1_STR}/users/me",
+        headers=headers,
+    )
+    assert r.status_code == 200
+    deleted_user = r.json()
+    assert deleted_user["message"] == "User deleted successfully"
+    result = await crud.get_user_by_name(db, username)
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_delete_user_me_as_superuser(
+    client: AsyncClient, superuser_token_headers: dict[str, str]
+) -> None:
+    r = await client.delete(
+        f"{settings.API_V1_STR}/users/me",
+        headers=superuser_token_headers,
+    )
+    assert r.status_code == 403
+    response = r.json()
+    assert response["detail"] == "Super users are not allowed to delete themselves"
+
+
+@pytest.mark.asyncio
 async def test_delete_user_by_superuser(
     client: AsyncClient, superuser_token_headers: dict[str, str], db: AsyncSession
 ) -> None:
