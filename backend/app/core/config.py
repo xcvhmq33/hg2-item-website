@@ -1,6 +1,6 @@
 from typing import Annotated, Any
 
-from pydantic import AnyUrl, BeforeValidator, PostgresDsn, computed_field
+from pydantic import AnyUrl, BeforeValidator, EmailStr, PostgresDsn, computed_field
 from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     DB_PASS: str
     DB_NAME: str
     TEST_USER_NAME: str
-    FIRST_SUPERUSER_EMAIL: str
+    FIRST_SUPERUSER_EMAIL: EmailStr
     FIRST_SUPERUSER_NAME: str
     FIRST_SUPERUSER_PASS: str
 
