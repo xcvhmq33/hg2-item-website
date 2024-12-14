@@ -1,14 +1,38 @@
-from pydantic import PostgresDsn, computed_field
+from typing import Annotated, Any
+
+from pydantic import AnyUrl, BeforeValidator, PostgresDsn, computed_field
 from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def parse_cors(v: Any) -> list[str] | str:
+    if isinstance(v, str) and not v.startswith("["):
+        return [i.strip() for i in v.split(",")]
+    elif isinstance(v, list | str):
+        return v
+    raise ValueError(v)
+
+
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file="../.env")
+
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     FRONTEND_HOST: str = "http://localhost:5173"
     PROJECT_NAME: str = "Full Stack FastAPI Project"
     API_V1_STR: str = "/api/v1"
+
+    BACKEND_CORS_ORIGINS: Annotated[
+        list[AnyUrl] | str, BeforeValidator(parse_cors)
+    ] = []
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def all_cors_origins(self) -> list[str]:
+        return [str(origin).rstrip("/") for origin in self.BACKEND_CORS_ORIGINS] + [
+            self.FRONTEND_HOST
+        ]
+
     DB_HOST: str
     DB_PORT: int
     DB_USER: str
@@ -30,8 +54,6 @@ class Settings(BaseSettings):
             port=self.DB_PORT,
             path=self.DB_NAME,
         )  # type: ignore[return-value]
-
-    model_config = SettingsConfigDict(env_file="../.env")
 
 
 settings = Settings()
