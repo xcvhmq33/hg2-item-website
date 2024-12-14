@@ -1,10 +1,17 @@
 const API_BASE = "http://127.0.0.1:8000/api/v1/items";
-let currentPage = 0;
+let currentPage = 1;
 const itemsPerPage = 96;
 
 function changePage(direction) {
     currentPage += direction;
-    loadItems(currentPage);
+    if (currentPage < 1) {
+        currentPage = 1;
+        updatePagination()
+    } else {
+        loadItems(currentPage);
+    }
+    const inputer = document.getElementById('page-input');
+    inputer.value = currentPage;
 }
 
 function jumpToPage(event) {
@@ -18,20 +25,21 @@ function jumpToPage(event) {
 }
 
 async function loadItems(page) {
-    const response = await fetch(`${API_BASE}/?skip=${page * itemsPerPage}&limit=${itemsPerPage}`);
+    const response = await fetch(`${API_BASE}/?skip=${(page-1) * itemsPerPage}&limit=${itemsPerPage}`);
     const items = await response.json();
-    renderItems(items);
+    renderItems(items.data);
 }
 
 function renderItems(items) {
     const container = document.getElementById('items-container');
     container.innerHTML = '';
-    
+
     if (items.length === 0) {
         container.innerHTML = '<p>No items found.</p>';
+        updatePagination();
         return;
     }
-    
+
     items.forEach(item => {
         const itemDiv = document.createElement('div');
         itemDiv.classList.add('item');
@@ -42,7 +50,7 @@ function renderItems(items) {
         itemDiv.addEventListener('click', () => showItemDetails(item.ingame_id));
         container.appendChild(itemDiv);
     });
-    
+
     updatePagination();
 }
 
@@ -60,7 +68,7 @@ function updatePagination() {
     const prevButton = document.getElementById('prev');
     const nextButton = document.getElementById('next');
 
-    prevButton.disabled = currentPage === 0;
+    prevButton.disabled = (currentPage === 1);
     nextButton.disabled = false;
 }
 
